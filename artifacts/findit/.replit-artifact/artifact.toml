@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "FindIt"
+description = "A mobile-first personal visual memory app for saving belongings, reference photos, and manual observations so users can remember where they last saw things."
+version = "1.0.0"
+id = "artifacts/findit"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20647
+
+[services.development]
+run = "pnpm --filter @workspace/findit run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/findit", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/findit/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20647"
+BASE_PATH = "/"

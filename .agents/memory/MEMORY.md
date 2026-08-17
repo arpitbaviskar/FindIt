@@ -1,0 +1,1 @@
+- [FindIt media boundary](findit-media-boundary.md) — Step 1 keeps resized photos in the database until authenticated App Storage is available.

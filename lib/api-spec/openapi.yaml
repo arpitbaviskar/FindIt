@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: objects
+    description: Personal objects
+  - name: observations
+    description: Saved visual memories
+  - name: dashboard
+    description: Home screen summaries
 paths:
   /healthz:
     get:
@@ -24,7 +30,118 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /objects:
+    get:
+      operationId: listObjects
+      tags: [objects]
+      summary: List personal objects
+      responses:
+        "200":
+          description: Personal objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Object"
+    post:
+      operationId: createObject
+      tags: [objects]
+      summary: Create a personal object
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ObjectInput"
+      responses:
+        "201":
+          description: Created object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Object"
+  /objects/{id}:
+    get:
+      operationId: getObject
+      tags: [objects]
+      summary: Get a personal object
+      parameters:
+        - $ref: "#/components/parameters/ObjectId"
+      responses:
+        "200":
+          description: Personal object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Object"
+        "404":
+          description: Object not found
+  /observations:
+    get:
+      operationId: listObservations
+      tags: [observations]
+      summary: List saved observations
+      responses:
+        "200":
+          description: Saved observations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Observation"
+    post:
+      operationId: createObservation
+      tags: [observations]
+      summary: Save a manual observation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ObservationInput"
+      responses:
+        "201":
+          description: Created observation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Observation"
+  /home-summary:
+    get:
+      operationId: getHomeSummary
+      tags: [dashboard]
+      summary: Get home screen summary
+      responses:
+        "200":
+          description: Home summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeSummary"
+  /demo-data:
+    post:
+      operationId: loadDemoData
+      tags: [objects]
+      summary: Load optional demo objects
+      responses:
+        "201":
+          description: Demo objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Object"
 components:
+  parameters:
+    ObjectId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: number
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +150,139 @@ components:
           type: string
       required:
         - status
+    ObjectCategory:
+      type: string
+      enum:
+        - Electronics
+        - Accessories
+        - Documents
+        - Clothing
+        - Household
+        - Other
+    Object:
+      type: object
+      properties:
+        id:
+          type: number
+        userId:
+          type: string
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/ObjectCategory"
+        description:
+          type: ["string", "null"]
+        referenceImage:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        observationCount:
+          type: number
+      required:
+        - id
+        - userId
+        - name
+        - category
+        - description
+        - referenceImage
+        - createdAt
+        - updatedAt
+        - observationCount
+    ObjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        category:
+          $ref: "#/components/schemas/ObjectCategory"
+        description:
+          type: string
+        referenceImage:
+          type: string
+      required:
+        - name
+        - category
+    Observation:
+      type: object
+      properties:
+        id:
+          type: number
+        userId:
+          type: string
+        objectId:
+          type: number
+        objectName:
+          type: string
+        image:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+          format: date-time
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        locationName:
+          type: ["string", "null"]
+        detectionConfidence:
+          type: ["number", "null"]
+        source:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - objectId
+        - objectName
+        - image
+        - timestamp
+        - latitude
+        - longitude
+        - locationName
+        - detectionConfidence
+        - source
+        - createdAt
+    ObservationInput:
+      type: object
+      properties:
+        objectId:
+          type: number
+        image:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        latitude:
+          type: number
+        longitude:
+          type: number
+        locationName:
+          type: string
+        source:
+          type: string
+      required:
+        - objectId
+        - image
+    HomeSummary:
+      type: object
+      properties:
+        objectCount:
+          type: number
+        observationCount:
+          type: number
+        recentObservations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Observation"
+      required:
+        - objectCount
+        - observationCount
+        - recentObservations
 
