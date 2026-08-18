@@ -83,6 +83,24 @@ export const GetObjectResponse = zod.object({
 /**
  * @summary List saved observations
  */
+export const listObservationsResponseAnnotationsItemXMin = 0;
+export const listObservationsResponseAnnotationsItemXMax = 1;
+
+export const listObservationsResponseAnnotationsItemYMin = 0;
+export const listObservationsResponseAnnotationsItemYMax = 1;
+
+export const listObservationsResponseAnnotationsItemWidthExclusiveMin = 0;
+export const listObservationsResponseAnnotationsItemWidthMax = 1;
+
+export const listObservationsResponseAnnotationsItemHeightExclusiveMin = 0;
+export const listObservationsResponseAnnotationsItemHeightMax = 1;
+
+export const listObservationsResponseAnnotationsItemImageWidthExclusiveMin = 0;
+
+export const listObservationsResponseAnnotationsItemImageHeightExclusiveMin = 0;
+
+
+
 export const ListObservationsResponseItem = zod.object({
   "id": zod.number(),
   "userId": zod.string(),
@@ -95,7 +113,25 @@ export const ListObservationsResponseItem = zod.object({
   "locationName": zod.string().nullable(),
   "detectionConfidence": zod.number().nullable(),
   "source": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "annotations": zod.array(zod.object({
+  "id": zod.number(),
+  "observationId": zod.number(),
+  "objectId": zod.number(),
+  "objectName": zod.string(),
+  "x": zod.number().min(listObservationsResponseAnnotationsItemXMin).max(listObservationsResponseAnnotationsItemXMax),
+  "y": zod.number().min(listObservationsResponseAnnotationsItemYMin).max(listObservationsResponseAnnotationsItemYMax),
+  "width": zod.number().gt(listObservationsResponseAnnotationsItemWidthExclusiveMin).max(listObservationsResponseAnnotationsItemWidthMax),
+  "height": zod.number().gt(listObservationsResponseAnnotationsItemHeightExclusiveMin).max(listObservationsResponseAnnotationsItemHeightMax),
+  "imageWidth": zod.number().gt(listObservationsResponseAnnotationsItemImageWidthExclusiveMin),
+  "imageHeight": zod.number().gt(listObservationsResponseAnnotationsItemImageHeightExclusiveMin),
+  "classId": zod.number().nullable(),
+  "className": zod.string().nullable(),
+  "annotationFormat": zod.string(),
+  "datasetId": zod.string().nullable(),
+  "trainingSessionId": zod.string().nullable(),
   "createdAt": zod.coerce.date()
+}))
 })
 export const ListObservationsResponse = zod.array(ListObservationsResponseItem)
 
@@ -103,6 +139,24 @@ export const ListObservationsResponse = zod.array(ListObservationsResponseItem)
 /**
  * @summary Save a manual observation
  */
+export const createObservationBodyAnnotationsItemXMin = 0;
+export const createObservationBodyAnnotationsItemXMax = 1;
+
+export const createObservationBodyAnnotationsItemYMin = 0;
+export const createObservationBodyAnnotationsItemYMax = 1;
+
+export const createObservationBodyAnnotationsItemWidthExclusiveMin = 0;
+export const createObservationBodyAnnotationsItemWidthMax = 1;
+
+export const createObservationBodyAnnotationsItemHeightExclusiveMin = 0;
+export const createObservationBodyAnnotationsItemHeightMax = 1;
+
+export const createObservationBodyAnnotationsItemImageWidthExclusiveMin = 0;
+
+export const createObservationBodyAnnotationsItemImageHeightExclusiveMin = 0;
+
+
+
 export const CreateObservationBody = zod.object({
   "objectId": zod.number(),
   "image": zod.string(),
@@ -110,8 +164,40 @@ export const CreateObservationBody = zod.object({
   "latitude": zod.number().optional(),
   "longitude": zod.number().optional(),
   "locationName": zod.string().optional(),
-  "source": zod.string().optional()
+  "source": zod.string().optional(),
+  "annotations": zod.array(zod.object({
+  "objectId": zod.number(),
+  "x": zod.number().min(createObservationBodyAnnotationsItemXMin).max(createObservationBodyAnnotationsItemXMax),
+  "y": zod.number().min(createObservationBodyAnnotationsItemYMin).max(createObservationBodyAnnotationsItemYMax),
+  "width": zod.number().gt(createObservationBodyAnnotationsItemWidthExclusiveMin).max(createObservationBodyAnnotationsItemWidthMax),
+  "height": zod.number().gt(createObservationBodyAnnotationsItemHeightExclusiveMin).max(createObservationBodyAnnotationsItemHeightMax),
+  "imageWidth": zod.number().gt(createObservationBodyAnnotationsItemImageWidthExclusiveMin),
+  "imageHeight": zod.number().gt(createObservationBodyAnnotationsItemImageHeightExclusiveMin),
+  "classId": zod.number().optional(),
+  "className": zod.string().optional(),
+  "annotationFormat": zod.string().optional(),
+  "datasetId": zod.string().optional(),
+  "trainingSessionId": zod.string().optional()
+})).optional()
 })
+
+export const createObservationResponseAnnotationsItemXMin = 0;
+export const createObservationResponseAnnotationsItemXMax = 1;
+
+export const createObservationResponseAnnotationsItemYMin = 0;
+export const createObservationResponseAnnotationsItemYMax = 1;
+
+export const createObservationResponseAnnotationsItemWidthExclusiveMin = 0;
+export const createObservationResponseAnnotationsItemWidthMax = 1;
+
+export const createObservationResponseAnnotationsItemHeightExclusiveMin = 0;
+export const createObservationResponseAnnotationsItemHeightMax = 1;
+
+export const createObservationResponseAnnotationsItemImageWidthExclusiveMin = 0;
+
+export const createObservationResponseAnnotationsItemImageHeightExclusiveMin = 0;
+
+
 
 export const CreateObservationResponse = zod.object({
   "id": zod.number(),
@@ -125,13 +211,49 @@ export const CreateObservationResponse = zod.object({
   "locationName": zod.string().nullable(),
   "detectionConfidence": zod.number().nullable(),
   "source": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "annotations": zod.array(zod.object({
+  "id": zod.number(),
+  "observationId": zod.number(),
+  "objectId": zod.number(),
+  "objectName": zod.string(),
+  "x": zod.number().min(createObservationResponseAnnotationsItemXMin).max(createObservationResponseAnnotationsItemXMax),
+  "y": zod.number().min(createObservationResponseAnnotationsItemYMin).max(createObservationResponseAnnotationsItemYMax),
+  "width": zod.number().gt(createObservationResponseAnnotationsItemWidthExclusiveMin).max(createObservationResponseAnnotationsItemWidthMax),
+  "height": zod.number().gt(createObservationResponseAnnotationsItemHeightExclusiveMin).max(createObservationResponseAnnotationsItemHeightMax),
+  "imageWidth": zod.number().gt(createObservationResponseAnnotationsItemImageWidthExclusiveMin),
+  "imageHeight": zod.number().gt(createObservationResponseAnnotationsItemImageHeightExclusiveMin),
+  "classId": zod.number().nullable(),
+  "className": zod.string().nullable(),
+  "annotationFormat": zod.string(),
+  "datasetId": zod.string().nullable(),
+  "trainingSessionId": zod.string().nullable(),
   "createdAt": zod.coerce.date()
+}))
 })
 
 
 /**
  * @summary Get home screen summary
  */
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemXMin = 0;
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemXMax = 1;
+
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemYMin = 0;
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemYMax = 1;
+
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemWidthExclusiveMin = 0;
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemWidthMax = 1;
+
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemHeightExclusiveMin = 0;
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemHeightMax = 1;
+
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemImageWidthExclusiveMin = 0;
+
+export const getHomeSummaryResponseRecentObservationsItemAnnotationsItemImageHeightExclusiveMin = 0;
+
+
+
 export const GetHomeSummaryResponse = zod.object({
   "objectCount": zod.number(),
   "observationCount": zod.number(),
@@ -147,7 +269,25 @@ export const GetHomeSummaryResponse = zod.object({
   "locationName": zod.string().nullable(),
   "detectionConfidence": zod.number().nullable(),
   "source": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "annotations": zod.array(zod.object({
+  "id": zod.number(),
+  "observationId": zod.number(),
+  "objectId": zod.number(),
+  "objectName": zod.string(),
+  "x": zod.number().min(getHomeSummaryResponseRecentObservationsItemAnnotationsItemXMin).max(getHomeSummaryResponseRecentObservationsItemAnnotationsItemXMax),
+  "y": zod.number().min(getHomeSummaryResponseRecentObservationsItemAnnotationsItemYMin).max(getHomeSummaryResponseRecentObservationsItemAnnotationsItemYMax),
+  "width": zod.number().gt(getHomeSummaryResponseRecentObservationsItemAnnotationsItemWidthExclusiveMin).max(getHomeSummaryResponseRecentObservationsItemAnnotationsItemWidthMax),
+  "height": zod.number().gt(getHomeSummaryResponseRecentObservationsItemAnnotationsItemHeightExclusiveMin).max(getHomeSummaryResponseRecentObservationsItemAnnotationsItemHeightMax),
+  "imageWidth": zod.number().gt(getHomeSummaryResponseRecentObservationsItemAnnotationsItemImageWidthExclusiveMin),
+  "imageHeight": zod.number().gt(getHomeSummaryResponseRecentObservationsItemAnnotationsItemImageHeightExclusiveMin),
+  "classId": zod.number().nullable(),
+  "className": zod.string().nullable(),
+  "annotationFormat": zod.string(),
+  "datasetId": zod.string().nullable(),
+  "trainingSessionId": zod.string().nullable(),
   "createdAt": zod.coerce.date()
+}))
 }))
 })
 

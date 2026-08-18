@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './annotation';
+export * from './annotationInput';
 export * from './healthStatus';
 export * from './homeSummary';
 export * from './object';

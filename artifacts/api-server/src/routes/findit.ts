@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   CreateObjectBody,
   CreateObjectResponse,
@@ -14,6 +14,7 @@ import {
 } from "@workspace/api-zod";
 import {
   db,
+  annotationsTable,
   observationsTable,
   objectsTable,
   usersTable,
@@ -76,11 +77,40 @@ async function listObservationRows(limit?: number) {
     .where(eq(observationsTable.userId, LOCAL_USER_ID))
     .orderBy(desc(observationsTable.timestamp));
 
-  if (limit) {
-    return query.limit(limit);
-  }
+  const rows = await (limit ? query.limit(limit) : query);
+  const observationIds = rows.map((row) => row.id);
+  const annotationRows = observationIds.length
+    ? await db
+        .select({
+          id: annotationsTable.id,
+          observationId: annotationsTable.observationId,
+          objectId: annotationsTable.objectId,
+          objectName: objectsTable.name,
+          x: annotationsTable.x,
+          y: annotationsTable.y,
+          width: annotationsTable.width,
+          height: annotationsTable.height,
+          imageWidth: annotationsTable.imageWidth,
+          imageHeight: annotationsTable.imageHeight,
+          classId: annotationsTable.classId,
+          className: annotationsTable.className,
+          annotationFormat: annotationsTable.annotationFormat,
+          datasetId: annotationsTable.datasetId,
+          trainingSessionId: annotationsTable.trainingSessionId,
+          createdAt: annotationsTable.createdAt,
+        })
+        .from(annotationsTable)
+        .innerJoin(objectsTable, eq(annotationsTable.objectId, objectsTable.id))
+        .where(inArray(annotationsTable.observationId, observationIds))
+        .orderBy(annotationsTable.createdAt)
+    : [];
 
-  return query;
+  return rows.map((row) => ({
+    ...row,
+    annotations: annotationRows.filter(
+      (annotation) => annotation.observationId === row.id,
+    ),
+  }));
 }
 
 router.get("/objects", async (req, res): Promise<void> => {
@@ -168,19 +198,77 @@ router.post("/observations", async (req, res): Promise<void> => {
     return;
   }
 
-  const [created] = await db
-    .insert(observationsTable)
-    .values({
-      userId: LOCAL_USER_ID,
-      objectId: parsed.data.objectId,
-      image: parsed.data.image,
-      timestamp: parsed.data.timestamp ?? new Date(),
-      latitude: parsed.data.latitude ?? null,
-      longitude: parsed.data.longitude ?? null,
-      locationName: parsed.data.locationName?.trim() || null,
-      source: parsed.data.source?.trim() || "manual",
-    })
-    .returning();
+  const annotationInputs = parsed.data.annotations ?? [];
+  const invalidAnnotation = annotationInputs.find(
+    (annotation) =>
+      annotation.x < 0 ||
+      annotation.y < 0 ||
+      annotation.width <= 0 ||
+      annotation.height <= 0 ||
+      annotation.x + annotation.width > 1 ||
+      annotation.y + annotation.height > 1 ||
+      annotation.imageWidth <= 0 ||
+      annotation.imageHeight <= 0,
+  );
+  if (invalidAnnotation) {
+    res.status(400).json({ error: "Each annotation must fit within the image." });
+    return;
+  }
+
+  const annotationObjectIds = [...new Set(annotationInputs.map((item) => item.objectId))];
+  if (annotationObjectIds.length > 0) {
+    const ownedAnnotationObjects = await db
+      .select({ id: objectsTable.id })
+      .from(objectsTable)
+      .where(
+        and(
+          eq(objectsTable.userId, LOCAL_USER_ID),
+          inArray(objectsTable.id, annotationObjectIds),
+        ),
+      );
+    if (ownedAnnotationObjects.length !== annotationObjectIds.length) {
+      res.status(404).json({ error: "One or more annotated objects were not found." });
+      return;
+    }
+  }
+
+  const created = await db.transaction(async (tx) => {
+    const [observation] = await tx
+      .insert(observationsTable)
+      .values({
+        userId: LOCAL_USER_ID,
+        objectId: parsed.data.objectId,
+        image: parsed.data.image,
+        timestamp: parsed.data.timestamp ?? new Date(),
+        latitude: parsed.data.latitude ?? null,
+        longitude: parsed.data.longitude ?? null,
+        locationName: parsed.data.locationName?.trim() || null,
+        source: parsed.data.source?.trim() || "manual",
+      })
+      .returning();
+
+    if (annotationInputs.length > 0) {
+      await tx.insert(annotationsTable).values(
+        annotationInputs.map((annotation) => ({
+          observationId: observation.id,
+          objectId: annotation.objectId,
+          x: annotation.x,
+          y: annotation.y,
+          width: annotation.width,
+          height: annotation.height,
+          imageWidth: Math.round(annotation.imageWidth),
+          imageHeight: Math.round(annotation.imageHeight),
+          classId: annotation.classId ?? null,
+          className: annotation.className?.trim() || null,
+          annotationFormat: annotation.annotationFormat?.trim() || "xywh-normalized",
+          datasetId: annotation.datasetId?.trim() || null,
+          trainingSessionId: annotation.trainingSessionId?.trim() || null,
+        })),
+      );
+    }
+
+    return observation;
+  });
 
   const [row] = await listObservationRows(1);
   const createdRow = row?.id === created.id ? row : (await listObservationRows()).find((item) => item.id === created.id);

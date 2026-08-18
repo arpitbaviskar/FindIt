@@ -43,6 +43,47 @@ export interface ObjectInput {
   referenceImage?: string;
 }
 
+export interface Annotation {
+  id: number;
+  observationId: number;
+  objectId: number;
+  objectName: string;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  x: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  y: number;
+  /**
+     * @maximum 1
+     * @exclusiveMinimum 0
+     */
+  width: number;
+  /**
+     * @maximum 1
+     * @exclusiveMinimum 0
+     */
+  height: number;
+  /** @exclusiveMinimum 0 */
+  imageWidth: number;
+  /** @exclusiveMinimum 0 */
+  imageHeight: number;
+  /** @nullable */
+  classId: number | null;
+  /** @nullable */
+  className: string | null;
+  annotationFormat: string;
+  /** @nullable */
+  datasetId: string | null;
+  /** @nullable */
+  trainingSessionId: string | null;
+  createdAt: string;
+}
+
 export interface Observation {
   id: number;
   userId: string;
@@ -61,6 +102,40 @@ export interface Observation {
   detectionConfidence: number | null;
   source: string;
   createdAt: string;
+  annotations: Annotation[];
+}
+
+export interface AnnotationInput {
+  objectId: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  x: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  y: number;
+  /**
+     * @maximum 1
+     * @exclusiveMinimum 0
+     */
+  width: number;
+  /**
+     * @maximum 1
+     * @exclusiveMinimum 0
+     */
+  height: number;
+  /** @exclusiveMinimum 0 */
+  imageWidth: number;
+  /** @exclusiveMinimum 0 */
+  imageHeight: number;
+  classId?: number;
+  className?: string;
+  annotationFormat?: string;
+  datasetId?: string;
+  trainingSessionId?: string;
 }
 
 export interface ObservationInput {
@@ -71,6 +146,7 @@ export interface ObservationInput {
   longitude?: number;
   locationName?: string;
   source?: string;
+  annotations?: AnnotationInput[];
 }
 
 export interface HomeSummary {

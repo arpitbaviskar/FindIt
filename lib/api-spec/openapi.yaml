@@ -14,6 +14,8 @@ tags:
     description: Personal objects
   - name: observations
     description: Saved visual memories
+  - name: annotations
+    description: Manual visual annotations
   - name: dashboard
     description: Home screen summaries
 paths:
@@ -236,6 +238,10 @@ components:
         createdAt:
           type: string
           format: date-time
+        annotations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Annotation"
       required:
         - id
         - userId
@@ -249,6 +255,7 @@ components:
         - detectionConfidence
         - source
         - createdAt
+        - annotations
     ObservationInput:
       type: object
       properties:
@@ -267,9 +274,121 @@ components:
           type: string
         source:
           type: string
+        annotations:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnnotationInput"
       required:
         - objectId
         - image
+    Annotation:
+      type: object
+      properties:
+        id:
+          type: number
+        observationId:
+          type: number
+        objectId:
+          type: number
+        objectName:
+          type: string
+        x:
+          type: number
+          minimum: 0
+          maximum: 1
+        y:
+          type: number
+          minimum: 0
+          maximum: 1
+        width:
+          type: number
+          exclusiveMinimum: 0
+          maximum: 1
+        height:
+          type: number
+          exclusiveMinimum: 0
+          maximum: 1
+        imageWidth:
+          type: number
+          exclusiveMinimum: 0
+        imageHeight:
+          type: number
+          exclusiveMinimum: 0
+        classId:
+          type: ["number", "null"]
+        className:
+          type: ["string", "null"]
+        annotationFormat:
+          type: string
+        datasetId:
+          type: ["string", "null"]
+        trainingSessionId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - observationId
+        - objectId
+        - objectName
+        - x
+        - y
+        - width
+        - height
+        - imageWidth
+        - imageHeight
+        - classId
+        - className
+        - annotationFormat
+        - datasetId
+        - trainingSessionId
+        - createdAt
+    AnnotationInput:
+      type: object
+      properties:
+        objectId:
+          type: number
+        x:
+          type: number
+          minimum: 0
+          maximum: 1
+        y:
+          type: number
+          minimum: 0
+          maximum: 1
+        width:
+          type: number
+          exclusiveMinimum: 0
+          maximum: 1
+        height:
+          type: number
+          exclusiveMinimum: 0
+          maximum: 1
+        imageWidth:
+          type: number
+          exclusiveMinimum: 0
+        imageHeight:
+          type: number
+          exclusiveMinimum: 0
+        classId:
+          type: number
+        className:
+          type: string
+        annotationFormat:
+          type: string
+        datasetId:
+          type: string
+        trainingSessionId:
+          type: string
+      required:
+        - objectId
+        - x
+        - y
+        - width
+        - height
+        - imageWidth
+        - imageHeight
     HomeSummary:
       type: object
       properties:

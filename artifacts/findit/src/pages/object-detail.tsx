@@ -3,6 +3,7 @@ import { Link, useParams } from 'wouter';
 import { useGetObject, useListObservations } from '@workspace/api-client-react';
 import { PageHeader } from '@/components/app-shell';
 import { CategoryIcon, ErrorState, formatRelativeDate, LoadingState, ObjectImage, ObservationMeta } from '@/components/visual';
+import { MemoryImage } from '@/components/memory-image';
 
 export default function ObjectDetailPage() {
   const params = useParams<{ id: string }>();
@@ -19,7 +20,10 @@ export default function ObjectDetailPage() {
     <section><div className="mb-4 flex items-center justify-between"><h2 className="section-title">Memory trail</h2><span className="text-xs text-muted-foreground">{observations.length} saved</span></div>
       {observationsQuery.isLoading && <LoadingState rows={2} />}
       {!observationsQuery.isLoading && !observations.length && <div className="rounded-2xl bg-secondary/60 px-5 py-8 text-center"><Camera size={24} className="mx-auto mb-2 text-primary" /><p className="font-semibold">No sightings yet</p><p className="mt-1 text-sm text-muted-foreground">Scan when you see it, and this trail will grow.</p></div>}
-      <div className="space-y-3">{observations.map((observation) => <div key={observation.id} className="card-surface flex gap-3 p-3" data-testid={`card-detail-observation-${observation.id}`}><ObjectImage observation={observation} className="h-16 w-16 shrink-0 rounded-xl" /><div className="min-w-0 flex-1"><p className="font-semibold">{formatRelativeDate(observation.timestamp)}</p><div className="mt-1"><ObservationMeta observation={observation} /></div>{observation.source && <p className="mt-2 inline-flex items-center gap-1 text-xs text-primary"><Clock3 size={12} />{observation.source === 'manual' ? 'Added by you' : observation.source}</p>}</div><ChevronRight size={16} className="mt-1 text-muted-foreground" /></div>)}</div>
+       <div className="space-y-4">{observations.map((observation) => <div key={observation.id} className="card-surface p-3" data-testid={`card-detail-observation-${observation.id}`}>
+         {observation.image ? <MemoryImage imageSrc={observation.image} imageWidth={observation.annotations[0]?.imageWidth ?? 4} imageHeight={observation.annotations[0]?.imageHeight ?? 3} annotations={observation.annotations.map((annotation) => ({ id: annotation.id, x: annotation.x, y: annotation.y, width: annotation.width, height: annotation.height, label: annotation.objectName }))} alt={`${item.name} visual memory`} className="mb-3" /> : <ObjectImage observation={observation} className="mb-3 h-40 rounded-xl" />}
+         <div className="flex items-start gap-3"><div className="min-w-0 flex-1"><p className="font-semibold">{formatRelativeDate(observation.timestamp)}</p><div className="mt-1"><ObservationMeta observation={observation} /></div>{observation.source && <p className="mt-2 inline-flex items-center gap-1 text-xs text-primary"><Clock3 size={12} />{observation.source === 'manual' ? 'Added by you' : observation.source}</p>}</div><ChevronRight size={16} className="mt-1 text-muted-foreground" /></div>
+       </div>)}</div>
     </section>
   </div>;
 }

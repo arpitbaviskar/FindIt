@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AnnotationInput } from './annotationInput';
 
 export interface ObservationInput {
   objectId: number;
@@ -14,4 +15,5 @@ export interface ObservationInput {
   longitude?: number;
   locationName?: string;
   source?: string;
+  annotations?: AnnotationInput[];
 }

@@ -1,0 +1,569 @@
+Continue building **FindIt** from the completed Step 1 implementation.
+
+IMPORTANT:
+I am developing and testing this entire project using **only my smartphone through Replit**. Keep everything mobile-first and Replit-compatible. Do not require a laptop, desktop software, Android Studio, Xcode, Docker, or a local development environment.
+
+## STEP 2 GOAL
+
+Build the **visual annotation and image-processing foundation** for FindIt.
+
+Do NOT implement YOLO training, embeddings, personalized model training, or natural-language search yet.
+
+The goal of this step is:
+
+**Phone Camera → Capture Image → Select Object → Annotate Bounding Box → Save Annotation**
+
+This will prepare the data pipeline that we will use for YOLO in Step 3.
+
+---
+
+# 1. Preserve Step 1
+
+Do not break existing functionality.
+
+The following must continue working:
+
+* Home
+* Scan
+* My Objects
+* Add Object
+* Object Details
+* History
+* Object creation
+* Reference photos
+* Manual observations
+* Database persistence
+* Mobile bottom navigation
+* Camera/gallery capture
+
+Before modifying anything, inspect the existing project structure and reuse existing components/services wherever possible.
+
+Do not rewrite the entire application unnecessarily.
+
+---
+
+# 2. Upgrade the Scan workflow
+
+Change the current Scan flow to:
+
+```text
+Scan
+ ↓
+Camera / Gallery
+ ↓
+Capture image
+ ↓
+Image preview
+ ↓
+Select object
+ ↓
+Annotate
+ ↓
+Review
+ ↓
+Save
+```
+
+After the user captures an image, provide:
+
+### Step A — Image Preview
+
+Show:
+
+* Captured image
+* Retake
+* Continue
+
+Make the image occupy most of the phone screen.
+
+---
+
+# 3. Object Selection
+
+After pressing Continue, show:
+
+**What object are you scanning?**
+
+Display the user's existing objects as large touch-friendly cards.
+
+Example:
+
+```text
+My Headphones
+My Keys
+My Laptop
+My Wallet
+```
+
+Also provide:
+
+**+ Create New Object**
+
+If a new object is created, return to the annotation workflow.
+
+The selected object should be clearly highlighted.
+
+---
+
+# 4. Bounding Box Annotation Tool
+
+This is the most important feature of Step 2.
+
+Create a mobile-friendly image annotation interface.
+
+Example:
+
+```text
+┌───────────────────────────┐
+│                           │
+│       PHONE IMAGE         │
+│                           │
+│      ┌────────────┐       │
+│      │ HEADPHONES │       │
+│      └────────────┘       │
+│                           │
+└───────────────────────────┘
+
+[Clear]             [Confirm]
+```
+
+The user should be able to draw a rectangular bounding box using their finger.
+
+Requirements:
+
+* Touch interaction
+* Drag from one point to another
+* Correctly handle dragging in any direction
+* Prevent coordinates from going outside the image
+* Correctly map screen coordinates to original image coordinates
+* Work with portrait and landscape photos
+* Handle different aspect ratios
+* Display the selected object's name above/beside the bounding box
+* Allow the user to clear and redraw the box
+* Allow the user to confirm the annotation
+
+Do NOT use mouse-only interactions.
+
+The annotation tool must work on an actual smartphone touchscreen.
+
+---
+
+# 5. Coordinate System
+
+Store bounding-box coordinates relative to the original image rather than the displayed canvas.
+
+Use normalized coordinates where possible:
+
+```text
+x
+y
+width
+height
+```
+
+normalized between:
+
+```text
+0.0 → 1.0
+```
+
+Also retain the original image dimensions.
+
+For example:
+
+```text
+{
+  "x": 0.32,
+  "y": 0.41,
+  "width": 0.28,
+  "height": 0.19,
+  "imageWidth": 1920,
+  "imageHeight": 1080
+}
+```
+
+This will make the annotations independent of the phone screen size.
+
+---
+
+# 6. Annotation Data Model
+
+Extend the database carefully.
+
+Create an `annotations` table or equivalent structure containing at minimum:
+
+```text
+id
+observation_id
+object_id
+x
+y
+width
+height
+image_width
+image_height
+created_at
+```
+
+The schema should be designed so we can later add:
+
+```text
+class_id
+class_name
+annotation_format
+dataset_id
+training_session_id
+```
+
+Do not implement training-session functionality yet.
+
+---
+
+# 7. Annotation Review Screen
+
+After drawing the bounding box, show a review screen.
+
+Example:
+
+```text
+┌───────────────────────────┐
+│                           │
+│        IMAGE              │
+│      ┌──────────┐         │
+│      │          │         │
+│      │  OBJECT  │         │
+│      │          │         │
+│      └──────────┘         │
+│                           │
+└───────────────────────────┘
+
+Object:
+My Headphones
+
+Bounding box:
+X: 0.31
+Y: 0.42
+W: 0.29
+H: 0.18
+
+[ Redraw ]       [ Save ]
+```
+
+Do not overwhelm the normal user with technical coordinates.
+
+The coordinate information can be shown in a small expandable “Details” section for debugging.
+
+---
+
+# 8. Multiple Objects in One Image
+
+Design the annotation system so that a single image can eventually contain multiple objects.
+
+For example:
+
+```text
+Photo
+
+┌───────────┐
+│ Headphones│
+└───────────┘
+
+                    ┌────────┐
+                    │  Keys  │
+                    └────────┘
+```
+
+For Step 2, allow the user to:
+
+1. Select an object.
+2. Draw its bounding box.
+3. Save it.
+4. Choose another object.
+5. Draw another bounding box.
+6. Finish annotation.
+
+Show a small list below the image:
+
+```text
+Annotations
+
+✓ My Headphones
+✓ My Keys
+
++ Add another object
+```
+
+Each annotation should be independently editable/deletable.
+
+---
+
+# 9. Annotation Editing
+
+Users must be able to:
+
+* Delete an annotation
+* Redraw an annotation
+* Change the associated object
+* Add another annotation
+* Cancel without saving
+
+Make these controls large enough for touch interaction.
+
+---
+
+# 10. Image Processing
+
+Improve the existing browser-side image processing.
+
+When capturing an image:
+
+* Preserve reasonable image quality.
+* Resize excessively large images to a sensible maximum resolution.
+* Preserve aspect ratio.
+* Correct image orientation where possible.
+* Generate a preview optimized for the phone UI.
+
+Do not aggressively compress images to the point that small objects become difficult to annotate.
+
+Keep the original dimensions in metadata.
+
+---
+
+# 11. Annotation Persistence
+
+When the user presses Save:
+
+Save:
+
+```text
+Observation
++
+Annotation(s)
+```
+
+The relationship should be:
+
+```text
+User
+ ↓
+Object
+ ↓
+Observation
+ ↓
+Annotation(s)
+```
+
+Make sure refreshing the application does not lose annotations.
+
+---
+
+# 12. View Existing Annotations
+
+Update Object Details so the user can eventually see:
+
+**Visual Memories**
+
+Each saved observation should display its image.
+
+If annotations exist, draw the bounding boxes over the image.
+
+Example:
+
+```text
+My Headphones
+
+Visual Memories
+
+[ Image ]
+   └── bounding box around headphones
+
+18 Aug 2026 • 11:32 PM
+```
+
+---
+
+# 13. Dataset Preparation Utility
+
+Do NOT train a model yet.
+
+However, create a small internal service/module that can eventually convert saved annotations into YOLO format.
+
+For each annotation, we will eventually need:
+
+```text
+class_id
+x_center
+y_center
+width
+height
+```
+
+normalized to 0–1.
+
+For now, implement a utility function that converts:
+
+```text
+x
+y
+width
+height
+```
+
+into YOLO normalized format.
+
+Keep this isolated in something like:
+
+```text
+dataset/
+  annotationConverter
+```
+
+Do not expose unnecessary technical details to normal users yet.
+
+---
+
+# 14. Temporary Training Dataset Architecture
+
+Prepare the code architecture for a future temporary dataset.
+
+Eventually we want:
+
+```text
+User Images
+     ↓
+Annotations
+     ↓
+Temporary Dataset
+     ↓
+Augmentation
+     ↓
+YOLO Training
+     ↓
+Model
+     ↓
+Temporary Dataset Deleted
+```
+
+Do not actually generate augmented images or train anything in Step 2.
+
+Just make sure the annotation/data structures won't prevent this later.
+
+---
+
+# 15. Mobile UX
+
+This feature must be designed specifically for smartphone use.
+
+Important:
+
+* Touch-first
+* No hover-dependent interactions
+* Large buttons
+* Avoid tiny controls
+* Keep annotation canvas within the usable viewport
+* Avoid accidental scrolling while drawing
+* Prevent browser gestures from interfering with annotation where possible
+* Make the annotation interface usable with one hand if reasonably possible
+
+Test using a smartphone-sized viewport.
+
+---
+
+# 16. Error Handling
+
+Handle:
+
+* Camera permission denied
+* Gallery upload failure
+* Invalid image
+* Extremely large image
+* Annotation outside image
+* Zero-size bounding box
+* Failed database save
+* Network failure
+
+Show simple user-friendly messages.
+
+Do not expose raw server errors to the user.
+
+---
+
+# 17. Do NOT implement yet
+
+Absolutely do NOT implement:
+
+* YOLO26
+* YOLO training
+* YOLO inference
+* embeddings
+* vector database
+* personalized model
+* automatic object detection
+* automatic annotation
+* AI APIs
+* natural-language search
+* cloud model training
+
+Those belong to later steps.
+
+---
+
+# 18. Step 2 success criteria
+
+Before considering Step 2 complete, verify this exact workflow on a smartphone:
+
+```text
+Open FindIt
+     ↓
+Tap Scan
+     ↓
+Take photo
+     ↓
+Preview
+     ↓
+Select My Headphones
+     ↓
+Draw bounding box with finger
+     ↓
+Confirm
+     ↓
+Add another annotation
+     ↓
+Select My Keys
+     ↓
+Draw second bounding box
+     ↓
+Save
+     ↓
+Observation saved
+     ↓
+Open History
+     ↓
+See image + annotations
+     ↓
+Refresh app
+     ↓
+Annotations still exist
+```
+
+Also verify:
+
+* Bounding boxes remain correctly positioned after refresh.
+* Portrait images work.
+* Landscape images work.
+* Different phone screen sizes do not distort coordinates.
+* Annotation coordinates are stored relative to the original image.
+* Existing Step 1 functionality still works.
+* Typecheck passes.
+* No obvious browser/runtime errors.
+
+At the end, report:
+
+1. What changed.
+2. Database changes.
+3. New annotation components/services.
+4. What was tested.
+5. Any known limitations.
+6. Confirm explicitly that YOLO/training/embeddings have NOT been implemented.
+
+**Do not proceed to Step 3 automatically. Stop after Step 2 is complete.**

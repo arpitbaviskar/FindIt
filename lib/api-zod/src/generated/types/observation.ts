@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Annotation } from './annotation';
 
 export interface Observation {
   id: number;
@@ -24,4 +25,5 @@ export interface Observation {
   detectionConfidence: number | null;
   source: string;
   createdAt: Date;
+  annotations: Annotation[];
 }
